@@ -41,9 +41,10 @@ public class Main {
 
         String fileName = rrdAntlrOptions.getInputFileName();
 
+        System.out.println("ignore errors? " + rrdAntlrOptions.shouldIgnoreErrors());
         System.out.println("parsing: " + fileName + " ...");
 
-        DiagramGenerator generator = new DiagramGenerator(fileName);
+        DiagramGenerator generator = new DiagramGenerator(fileName, rrdAntlrOptions.shouldIgnoreErrors());
 
         System.out.println("creating png images from all grammar rules...");
 

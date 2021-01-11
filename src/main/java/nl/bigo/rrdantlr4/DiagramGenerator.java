@@ -15,11 +15,13 @@ import org.apache.batik.transcoder.image.PNGTranscoder;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Matcher;
@@ -38,7 +40,25 @@ public class DiagramGenerator {
 
     // Java's built-in JS interpreter (Rhino).
     private static final ScriptEngineManager MANAGER = new ScriptEngineManager();
-    private static final ScriptEngine ENGINE = MANAGER.getEngineByName("JavaScript");
+
+    static {
+        List<ScriptEngineFactory> factories = MANAGER.getEngineFactories();
+
+        // We obtain a ScriptEngine from the available factories where
+        // the language name is ECMAScript and the version is 1.6.
+        // ECMAScript is the standard name for JavaScript programming
+        // language. If we found the desired language we then get the
+        // ScriptEngine by calling factory's getScriptEngine() method.
+        ScriptEngine engine = null;
+        for (ScriptEngineFactory factory : factories) {
+            String language = factory.getLanguageName();
+            String version = factory.getLanguageVersion();
+            System.err.println("language = " + language + " " + version);
+        }
+    }
+
+    //private static final ScriptEngine ENGINE = MANAGER.getEngineByName("JavaScript");
+    private static final ScriptEngine ENGINE = MANAGER.getEngineByName("ECMAScript");
 
     // The library used to convert grammar rules to SVG.
     private static final String RAILROAD_SCRIPT = slurp(DiagramGenerator.class.getResourceAsStream("/railroad-diagram.js"));
@@ -79,21 +99,26 @@ public class DiagramGenerator {
 
     private final Map<String, String> comments;
 
+    private final boolean ignoreErrors;
+
     /**
      * Creates a new instance of this class and will parse the
      * provided `antlr4Grammar`.
      *
      * @param antlr4Grammar
      *         the ANTLR 4 grammar to parse. It can be a remote- or local file
+     * @param ignoreErrors
+     *         ignore unparsed grammar blocks
      *
      * @throws IOException
      *         when the grammar could not be parsed.
      */
-    public DiagramGenerator(String antlr4Grammar) throws IOException {
+    public DiagramGenerator(String antlr4Grammar, final boolean ignoreErrors) throws IOException {
         this.antlr4Grammar = antlr4Grammar.trim();
         this.antlr4GrammarFileName = null;
         this.antlr4GrammarName = null;
         this.outputDir = null;
+        this.ignoreErrors = ignoreErrors;
         this.rules = parse();
 
         this.comments = CommentsParser.commentsMap(inputAsString(new FileInputStream(antlr4Grammar)));
@@ -141,7 +166,7 @@ public class DiagramGenerator {
         ANTLRv4Parser parser = new ANTLRv4Parser(new CommonTokenStream(lexer));
 
         ParseTree tree = parser.grammarSpec();
-        RuleVisitor visitor = new RuleVisitor();
+        RuleVisitor visitor = new RuleVisitor(this.ignoreErrors);
         visitor.visit(tree);
 
         return visitor.getRules();

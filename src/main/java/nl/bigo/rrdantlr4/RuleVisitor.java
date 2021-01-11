@@ -15,6 +15,8 @@ import static nl.bigo.rrdantlr4.ANTLRv4Parser.*;
  * [1] https://github.com/tabatkins/railroad-diagrams
  */
 public class RuleVisitor extends ANTLRv4ParserBaseVisitor<String> {
+    public static final String SHOW_UNKNOWN = "Comment('&#949;')";
+    public static final String SKIP_UNKNOWN = "Skip()";
 
     // A linked hash-map will guarantee the order of the grammar rules
     // to be the same as they occur inside the grammar.
@@ -24,13 +26,19 @@ public class RuleVisitor extends ANTLRv4ParserBaseVisitor<String> {
     // translate to SVG-railroad diagrams.
     private final LinkedHashMap<String, String> rules;
 
+    private final boolean ignoreErrors;
+
     /**
      * Creates a new instance of this visitor. Note that many of the
      * overridden methods are not used: we're only interested in lexer-
      * and parser-rules (and their contents).
+     *
+     * @param ignoreErrors indicates whether or not a small Greek epsilon should be outputted for an
+     *                     unparsed grammar section
      */
-    public RuleVisitor() {
+    public RuleVisitor(final boolean ignoreErrors) {
         this.rules = new LinkedHashMap<String, String>();
+        this.ignoreErrors = ignoreErrors;
     }
 
     //    grammarSpec
@@ -359,7 +367,7 @@ public class RuleVisitor extends ANTLRv4ParserBaseVisitor<String> {
             return this.visitLexerElements(ctx.lexerElements());
         }
         else {
-            return "Comment('&#949;')";
+            return showUnknown();
         }
     }
 
@@ -430,7 +438,7 @@ public class RuleVisitor extends ANTLRv4ParserBaseVisitor<String> {
             }
         }
         else {
-            return "Comment('&#949;')";
+            return showUnknown();
         }
 
         return builder.toString();
@@ -526,7 +534,7 @@ public class RuleVisitor extends ANTLRv4ParserBaseVisitor<String> {
             return this.visitElements(ctx.elements());
         }
         else {
-            return "Comment('&#949;')";
+            return showUnknown();
         }
     }
 
@@ -592,7 +600,7 @@ public class RuleVisitor extends ANTLRv4ParserBaseVisitor<String> {
             return "Comment('predicate')";
         }
         else {
-            return "Comment('&#949;')";
+            return showUnknown();
         }
     }
 
@@ -872,5 +880,9 @@ public class RuleVisitor extends ANTLRv4ParserBaseVisitor<String> {
             default:
                 return "NonTerminal('" + node.getText() + "')";
         }
+    }
+
+    private String showUnknown() {
+        return this.ignoreErrors ? SKIP_UNKNOWN : SHOW_UNKNOWN;
     }
 }

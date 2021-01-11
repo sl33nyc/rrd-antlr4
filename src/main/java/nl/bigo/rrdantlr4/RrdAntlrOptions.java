@@ -14,6 +14,9 @@ public class RrdAntlrOptions {
             "\nDefault is index.html")
     private String outputFileName = "index.html";
 
+    @Option(name="--ignore-errors", aliases = {"-ie"}, usage = "By default, show unparsed grammar sections as Greek letter, small epsilon")
+    private boolean ignoreErrors;
+
     @Option(name="--help", aliases = {"-?","-h"}, help = true, usage = "Show the command line usage and exit")
     private boolean requestingHelp;
 
@@ -28,4 +31,6 @@ public class RrdAntlrOptions {
     public boolean isRequestingHelp() {
         return requestingHelp;
     }
+
+    public boolean shouldIgnoreErrors() { return ignoreErrors; }
 }
