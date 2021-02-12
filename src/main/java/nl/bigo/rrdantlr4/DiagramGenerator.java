@@ -232,34 +232,29 @@ public class DiagramGenerator {
             return false;
         }
 
-        OutputStream stream = null;
+        try (OutputStream stream = new FileOutputStream(new File(this.outputDir, ruleName + ".svg"))) {
+            stream.write(svg.getBytes());
+        } catch (final IOException ioe) {
+            ioe.printStackTrace();
+        }
+
 
         try {
             PNGTranscoder transcoder = new PNGTranscoder();
 
-            TranscoderInput input = new TranscoderInput(new StringReader(svg));
-            stream = new FileOutputStream(new File(this.outputDir, ruleName + ".png"));
-            TranscoderOutput output = new TranscoderOutput(stream);
+            try (OutputStream stream = new FileOutputStream(new File(this.outputDir, ruleName + ".png"))) {
+                TranscoderInput input = new TranscoderInput(new StringReader(svg));
+                TranscoderOutput output = new TranscoderOutput(stream);
 
-            // Save the image.
-            transcoder.transcode(input, output);
-            stream.close();
+                // Save the image.
+                transcoder.transcode(input, output);
+            }
 
             return true;
         }
         catch (Exception e) {
             e.printStackTrace();
             return false;
-        }
-        finally {
-            if (stream != null) {
-                try {
-                    stream.close();
-                }
-                catch (IOException e) {
-                    // Ignore this.
-                }
-            }
         }
     }
 
