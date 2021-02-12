@@ -26,6 +26,8 @@ public class RuleVisitor extends ANTLRv4ParserBaseVisitor<String> {
     // translate to SVG-railroad diagrams.
     private final LinkedHashMap<String, String> rules;
 
+    private final Map<String, String> tokenLiterals;
+
     private final boolean ignoreErrors;
 
     /**
@@ -36,8 +38,9 @@ public class RuleVisitor extends ANTLRv4ParserBaseVisitor<String> {
      * @param ignoreErrors indicates whether or not a small Greek epsilon should be outputted for an
      *                     unparsed grammar section
      */
-    public RuleVisitor(final boolean ignoreErrors) {
-        this.rules = new LinkedHashMap<String, String>();
+    public RuleVisitor(final Map<String, String> tokenLiterals, final boolean ignoreErrors) {
+        this.rules = new LinkedHashMap<>();
+        this.tokenLiterals = tokenLiterals;
         this.ignoreErrors = ignoreErrors;
     }
 
@@ -874,9 +877,10 @@ public class RuleVisitor extends ANTLRv4ParserBaseVisitor<String> {
             case ANTLRv4Lexer.LEXER_CHAR_SET:
                 return "Terminal('" + this.escapeTerminal(node) + "')";
 
-            case ANTLRv4Lexer.TOKEN_REF:
-                return "Terminal('" + node.getText() + "')";
-
+            case ANTLRv4Lexer.TOKEN_REF: {
+                final String terminalLiteral = tokenLiterals.get(node.getSymbol().getText());
+                return "Terminal('" + (terminalLiteral != null ? ('\"' + terminalLiteral + '\"') : node.getText())+ "')";
+            }
             default:
                 return "NonTerminal('" + node.getText() + "')";
         }

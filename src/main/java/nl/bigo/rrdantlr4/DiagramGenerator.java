@@ -20,10 +20,7 @@ import javax.script.ScriptException;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -89,6 +86,9 @@ public class DiagramGenerator {
     // The grammar name of the grammar to parse.
     private String antlr4GrammarName;
 
+    // The optional tokens file name
+    private String antlr4TokensFileName;
+
     // The directory to save the html and/or png diagrams to.
     private File outputDir;
 
@@ -113,10 +113,11 @@ public class DiagramGenerator {
      * @throws IOException
      *         when the grammar could not be parsed.
      */
-    public DiagramGenerator(String antlr4Grammar, final boolean ignoreErrors) throws IOException {
+    public DiagramGenerator(String antlr4Grammar, final boolean ignoreErrors, final String antlr4TokensFileName) throws IOException {
         this.antlr4Grammar = antlr4Grammar.trim();
         this.antlr4GrammarFileName = null;
         this.antlr4GrammarName = null;
+        this.antlr4TokensFileName = antlr4TokensFileName;
         this.outputDir = null;
         this.ignoreErrors = ignoreErrors;
         this.rules = parse();
@@ -166,7 +167,7 @@ public class DiagramGenerator {
         ANTLRv4Parser parser = new ANTLRv4Parser(new CommonTokenStream(lexer));
 
         ParseTree tree = parser.grammarSpec();
-        RuleVisitor visitor = new RuleVisitor(this.ignoreErrors);
+        RuleVisitor visitor = new RuleVisitor(getTokenLiterals(this.antlr4TokensFileName), this.ignoreErrors);
         visitor.visit(tree);
 
         return visitor.getRules();
@@ -472,5 +473,34 @@ public class DiagramGenerator {
         }
 
         return builder.toString();
+    }
+
+    private static Map<String, String> getTokenLiterals(final String antlr4TokensFileName) throws IOException {
+        if (antlr4TokensFileName != null) {
+            final Map<String, String> tokenLiterals = new HashMap<>();
+
+            try (BufferedReader bufferedReader = new BufferedReader(new FileReader(antlr4TokensFileName))) {
+                final Map<Integer, String> tokenMapping = new HashMap<>();
+                String line;
+
+                while ((line = bufferedReader.readLine()) != null) {
+                    final int delimiter = line.lastIndexOf('=');
+                    final int rhs = Integer.parseInt(line.substring(delimiter + 1).trim());
+
+                    if (line.charAt(0) != '\'') {
+                        final String lhs = line.substring(0, delimiter);
+                        tokenMapping.put(rhs, lhs);
+                        continue;
+                    }
+
+                    final String lhs = line.substring(1, delimiter - 1);
+                    tokenLiterals.put(tokenMapping.get(rhs), lhs);
+                }
+            }
+
+            return Collections.unmodifiableMap(tokenLiterals);
+        }
+
+        return Collections.emptyMap();
     }
 }

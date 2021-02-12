@@ -17,6 +17,9 @@ public class RrdAntlrOptions {
     @Option(name="--ignore-errors", aliases = {"-ie"}, usage = "By default, show unparsed grammar sections as Greek letter, small epsilon")
     private boolean ignoreErrors;
 
+    @Option(name="--tokens", metaVar = "TOKENS_FILE", usage = "ANTLRv4 .tokens file")
+    private String tokensFileName;
+
     @Option(name="--help", aliases = {"-?","-h"}, help = true, usage = "Show the command line usage and exit")
     private boolean requestingHelp;
 
@@ -28,9 +31,12 @@ public class RrdAntlrOptions {
         return outputFileName;
     }
 
-    public boolean isRequestingHelp() {
-        return requestingHelp;
+    public boolean isRequestingHelp() { return requestingHelp;
     }
 
     public boolean shouldIgnoreErrors() { return ignoreErrors; }
+
+    public String getTokensFileName() {
+        return tokensFileName;
+    }
 }

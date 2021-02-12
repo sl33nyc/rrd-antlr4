@@ -42,9 +42,10 @@ public class Main {
         String fileName = rrdAntlrOptions.getInputFileName();
 
         System.out.println("ignore errors? " + rrdAntlrOptions.shouldIgnoreErrors());
+        System.out.println("tokens file:  " + rrdAntlrOptions.getTokensFileName());
         System.out.println("parsing: " + fileName + " ...");
 
-        DiagramGenerator generator = new DiagramGenerator(fileName, rrdAntlrOptions.shouldIgnoreErrors());
+        DiagramGenerator generator = new DiagramGenerator(fileName, rrdAntlrOptions.shouldIgnoreErrors(), rrdAntlrOptions.getTokensFileName());
 
         System.out.println("creating png images from all grammar rules...");
 
